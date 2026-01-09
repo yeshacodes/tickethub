@@ -112,7 +112,7 @@ export default function App() {
       setIsProcessing(true);
       setError(null);
 
-      const response = await fetch(`${baseUrl}/make-server-458470b3/orders`, {
+      const response = await fetch(`${baseUrl}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

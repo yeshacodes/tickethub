@@ -165,7 +165,7 @@ app.get("/make-server-458470b3/shows/:id", async (c) => {
 });
 
 // Create order and send confirmation email
-app.post("/make-server-458470b3/orders", async (c) => {
+app.post("/orders", async (c) => {
   try {
     const body = await c.req.json();
     const { showId, tickets, customerInfo } = body;
