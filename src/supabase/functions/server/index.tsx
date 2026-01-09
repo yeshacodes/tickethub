@@ -13,7 +13,7 @@ const resend = new Resend(resendApiKey);
 
 // Configure the sender email - change this after verifying your domain
 // After domain verification, change to: 'TheaterHub <noreply@yourdomain.com>'
-const SENDER_EMAIL = 'TheaterHub <onboarding@resend.dev>';
+const SENDER_EMAIL = 'Ticket Management <noreply@ticketmanagement.online>';
 
 // Enable logger
 app.use('*', logger(console.log));
@@ -292,33 +292,43 @@ app.post("/make-server-458470b3/orders", async (c) => {
         </html>
       `;
 
-      console.log('About to call resend.emails.send...');
-      
-      const emailResult = await resend.emails.send({
-        from: SENDER_EMAIL,
-        to: [customerInfo.email],
-        subject: `Booking Confirmation - ${show.title}`,
-        html: emailHtml,
-      });
+      let emailStatus: "sent" | "failed" = "failed";
+      let emailError: string | null = null;
+      let emailId: string | null = null;
 
-      console.log('✅ Email sent successfully!');
-      console.log('Email result:', JSON.stringify(emailResult, null, 2));
-    } catch (emailError) {
-      console.error('❌ ERROR SENDING EMAIL:');
-      console.error('Error type:', typeof emailError);
-      console.error('Error message:', emailError);
-      console.error('Error stack:', emailError instanceof Error ? emailError.stack : 'No stack');
-      console.error('Full error object:', JSON.stringify(emailError, null, 2));
-      // Don't fail the order if email fails, just log it
-    }
-    
+      try {
+        const emailResult = await resend.emails.send({
+          from: SENDER_EMAIL,
+          to: [customerInfo.email],
+          subject: `Booking Confirmation - ${show.title}`,
+          html: emailHtml,
+        });
+
+        emailStatus = "sent";
+        emailId =
+          (emailResult as any)?.data?.id ??
+          (emailResult as any)?.id ??
+          null;
+
+        console.log("✅ Email sent successfully!", emailResult);
+      } catch (err) {
+        emailStatus = "failed";
+        emailError = err instanceof Error ? err.message : String(err);
+
+        console.error("❌ EMAIL FAILED:", emailError);
+      }
+
+
     console.log('=== EMAIL SECTION COMPLETED ===');
 
-    return c.json({ 
-      success: true, 
-      order,
-      message: "Order created successfully. Confirmation email sent."
-    });
+      return c.json({
+        success: true,
+        order,
+        emailStatus,
+        emailId,
+        emailError,
+      });
+
   } catch (error) {
     console.log(`Error creating order: ${error}`);
     return c.json({ error: "Failed to create order", details: String(error) }, 500);
